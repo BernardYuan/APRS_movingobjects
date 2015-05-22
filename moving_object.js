@@ -107,10 +107,16 @@ function isMoving(symbol, dest_adr, src_adr)
 }
 
 function setSymbol(obj, symbol, dest_adr) {
-    if (symbol.charAt(0) == "/" || symbol.charAt(0) == "\\") //information field
+    if (symbol.charAt(1).match(/[\w\*!#\$%\^&\*\)\+,-\./;<>=\?']/)) { //information field
         obj["Symbol"] = symbol;
-    else if ((dest_adr.substr(0, 3)).localeCompare("GPS") == 0) //destination address is valid
-        obj["Symbol"] = dest_adr;
+        if (symbol.charAt(0) != '/' && symbol.charAt(0) != '\\' && symbol.charAt(1).match(/[#&0>A\^acnsuvz]/)) //has overlay
+            obj["Overlay"] = symbol.charAt(0);
+    }
+    else if ((dest_adr.substr(0, 3)).localeCompare("GPS") == 0) { //destination address is valid
+        obj["Symbol"] = dest_adr.substr(0, dest_adr.length);
+        if (dest_adr.slice(3, 5).match(/[A-Z][A-Z0-9]/) && dest_adr.charAt(5) != ' ') //has overlay
+            obj["Overlay"] = dest_adr.charAt(5);
+    }
     else obj["Symbol"] = "";
 }
 
