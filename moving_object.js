@@ -106,7 +106,7 @@ function isMoving(symbol, dest_adr, src_adr)
     return moves;
 }
 
-function setSymbol(obj, symbol, dest_adr) {
+function setSymbol(obj, symbol, dest_adr) {   //set  up the symbol field of the final object
     if (symbol.charAt(1).match(/[\w\*!#\$%\^&\*\)\+,-\./;<>=\?']/)) { //information field
         obj["Symbol"] = symbol;
         if (symbol.charAt(0) != '/' && symbol.charAt(0) != '\\' && symbol.charAt(1).match(/[#&0>A\^acnsuvz]/)) //has overlay
@@ -120,7 +120,7 @@ function setSymbol(obj, symbol, dest_adr) {
     else obj["Symbol"] = "";
 }
 
-function getTime(time){
+function getTime(time){   //transfer the time field into date object
     var d = new Date();
     var s;
     if (time.charAt(6)=="z"){
@@ -209,15 +209,23 @@ function SendtoDB(object){
     req.write(JSON.stringify(object));
     req.end();
 }
-// view engine setup
+function getPath(header) {
+    var path_array = [];
+    var format = header.split(',');
 
+    for(var i=1;i<format.length;i++) {
+        if(!format[i].match(/WIDE/)&&!format[i].match(/qA/)&&!format[i].match(/TCPIP/))
+            path_array.push(format[i]);
+    }
+    return  path_array;
+}
+// view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 app.use(bodyParser.json({
     extended: true
 }));
-app.post('/moving_obj' +
-'ect',function(q,res){
+app.post('/moving_object',function(q,res){
     console.log(q.body);
     res.send("received");
 });
@@ -228,7 +236,6 @@ app.listen(3000,function(){
 var buf=new Buffer("user BG5ZZZ-85 pass 24229 ver MY185\n#filter t/poi\n");
 
 var conn=net.connect({port:14580,host:'hangzhou.aprs2.net'},function() {
-    conn.setNoDelay();
     console.log("connection to server!");
     //console.log(conn);
     conn.write(buf);
@@ -264,6 +271,7 @@ conn.on('data',function(data){
         var header=array[i].split(':')[0];
         var info=array[i].slice(header.length+1);
         if(header&&info) {
+        	object["Path"] = getPath(header);
             object["Source"] = header.split('>')[0]; //source of the report
             //if (header.split('>')[1])
             object["Destination"] = header.split('>')[1].split(',')[0];  //destination of the report
@@ -519,8 +527,8 @@ conn.on('data',function(data){
                 }
             }
             else {
-             if(info[0]=="'"||info[0]=='`') otherstream.write(Date().toString()+':'+array[i]+'\n');
-             else exceptionstream.write(Date().toString()+':'+array[i]+'\n');
+             if(info[0]=="'"||info[0]=='`') otherstream.write(Date().toString()+':'+array[i]+'\n'); //mic-E encoded reports
+             else exceptionstream.write(Date().toString()+':'+array[i]+'\n'); //exceptions
              }
         }
     }
