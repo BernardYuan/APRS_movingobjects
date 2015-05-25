@@ -214,7 +214,7 @@ function getPath(header) {
     var format = header.split(',');
 
     for(var i=1;i<format.length;i++) {
-        if(!format[i].match(/WIDE/)&&!format[i].match(/qA/)&&!format[i].match(/TCPIP/))
+        if(!format[i].match(/WIDE/)&&!format[i].match(/qA/)&&!format[i].match(/TCPIP/)&&!format[i].match(/TRACE/)&&!format[i].match(/RELAY/))
             path_array.push(format[i]);
     }
     return  path_array;
