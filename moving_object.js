@@ -12,11 +12,14 @@ var exceptionstream=fs.createWriteStream('exception.log',{flag:'a'}); //exceptio
 //display the latitude and longitude in the given format
 function displayLat(lat)
 {
-    var lat_final, temp;
+    var lat_final, temp, dotIndex=-1;
 
-    lat_final = parseFloat(lat.substring(0, 2)); //degrees
-    temp = parseFloat(lat.substring(2, lat.length-1));
-    lat_final += temp/60.0;
+    dotIndex = lat.indexOf(".");
+    if (dotIndex != -1) { //there is a decimal point
+        lat_final = parseFloat(lat.substring(0, dotIndex)); //degrees
+        temp = parseFloat(lat.substring(dotIndex, lat.length - 1));
+        lat_final += temp/60.0;
+    } else lat_final = parseFloat(lat);
     if (lat.charAt(lat.length-1) == "S")
         lat_final *= -1;
 
@@ -24,11 +27,14 @@ function displayLat(lat)
 }
 function displayLong(long)
 {
-    var long_final, temp;
+    var long_final, temp, dotIndex=-1;
 
-    long_final = parseFloat(long.substring(0, 3)); //degrees
-    temp = parseFloat(long.substring(3, long.length-1));
-    long_final += temp/60.0;
+    dotIndex = long.indexOf(".");
+    if (dotIndex != -1) { //there is a decimal point    
+        long_final = parseFloat(long.substring(0, dotIndex)); //degrees
+        temp = parseFloat(long.substring(dotIndex, long.length - 1));
+        long_final += temp/60.0;
+    } else long_final = parseFloat(long);
     if (long.charAt(long.length-1) == "W")
         long_final *= -1;
 
@@ -204,7 +210,7 @@ function SendtoDB(object){
             'Content-Type':"application/json"
         }
     },function(res){
-       console.log("Sent");
+        console.log("Sent");
     });
     req.write(JSON.stringify(object));
     req.end();
@@ -247,15 +253,15 @@ var conn=net.connect({port:14580,host:'hangzhou.aprs2.net'},function() {
 conn.on("error",function(err){
     console.log(err.message);
 });
-    /*
-    socket.on('data',function(data){
-        console.log(data.toString());
-    });
+/*
+ socket.on('data',function(data){
+ console.log(data.toString());
+ });
 
-    socket.write('user BG5ZZZ-85 pass -24229 ver MY185',"utf8",function() {
-        console.log("sent verification");
-    });*/
-    //});
+ socket.write('user BG5ZZZ-85 pass -24229 ver MY185',"utf8",function() {
+ console.log("sent verification");
+ });*/
+//});
 
 //conn.write("user BG5ZZZ-85 pass 24229 ver MY185");
 conn.on('data',function(data){
@@ -271,7 +277,7 @@ conn.on('data',function(data){
         var header=array[i].split(':')[0];
         var info=array[i].slice(header.length+1);
         if(header&&info) {
-        	object["Path"] = getPath(header);
+            object["Path"] = getPath(header);
             object["Source"] = header.split('>')[0]; //source of the report
             //if (header.split('>')[1])
             object["Destination"] = header.split('>')[1].split(',')[0];  //destination of the report
@@ -396,8 +402,8 @@ conn.on('data',function(data){
             } else if (info[0] == ';') { //object
                 if (info[18] != '/') { //non-compressed
                     object["Name"] = info.slice(1, 10);
-                    object["Time"] = getTime(info.slice(11, 18));
-                    object["Latitude"] = displayLat(info.slice(18, 26));
+                    object["Time"] = getTime(info.slice(10, 17));
+                    object["Latitude"] = displayLat(info.slice(17, 26));        //17-25
                     object["Longitude"] = displayLong(info.slice(27, 36));
                     symbol = info.charAt(26) + info.charAt(36);
                     com_obj["Comment"] = info.slice(37);
@@ -498,8 +504,8 @@ conn.on('data',function(data){
                     else
                         com_obj["isLive"] = 0;
 
-                    object["Latitude"] = decodeLat(item_back.slice(2, 6));
-                    object["Longitude"] = decodeLong(info.slice(6, 10));
+                    object["Latitude"] = decodeLat(item_back.s0lice(2, 6));
+                    object["Longitude"] = decodeLong(info.slice(6, 1));
                     object["Name"] = item_front.slice(1);
                     symbol = item_back.charAt(1) + item_back.charAt(10);
                     c = item_back.charAt(11);
@@ -527,9 +533,9 @@ conn.on('data',function(data){
                 }
             }
             else {
-             if(info[0]=="'"||info[0]=='`') otherstream.write(Date().toString()+':'+array[i]+'\n'); //mic-E encoded reports
-             else exceptionstream.write(Date().toString()+':'+array[i]+'\n'); //exceptions
-             }
+                if(info[0]=="'"||info[0]=='`') otherstream.write(Date().toString()+':'+array[i]+'\n'); //mic-E encoded reports
+                else exceptionstream.write(Date().toString()+':'+array[i]+'\n'); //exceptions
+            }
         }
     }
 });
