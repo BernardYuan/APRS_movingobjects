@@ -168,7 +168,7 @@ function decodeType(type) {
         case '3': T = "Triangle"; break;
         case '4': T = "Box"; break;
         case '5': T = "Colour-filled circle"; break;
-        case '6': T = "Line"; xx *= -1; break;
+        case '6': T = "Line"; break;
         case '7': T = "Colour-filled ellipse"; break;
         case '8': T = "Colour-filled triangle"; break;
         case '9': T = "Colour-filled box"; break;
